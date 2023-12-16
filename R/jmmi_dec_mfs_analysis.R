@@ -160,7 +160,7 @@ mfs_afford_finance <- data %>%
 #% of vendors selecting "Yes"
 
 mfs_afford_price_vol <- data %>% 
-    mutate(affordability_price_volatility = 'estimate_price' == 'yes'| 'estimate_price_nfi' == 'yes') %>% # create new variable, NOTE GG: This indicators will be modified by Dec round DC
+    mutate(affordability_price_volatility = 'estimate_price' == 'yes'| 'estimate_price_nfi' == 'yes') %>% #NOTE GG: This indicators was contextualized accordingly
     mutate(affordability_price_volatility = if_else(affordability_price_volatility == 'yes',1,0)) %>% 
     group_by(adm1,adm2,adm3) %>% 
     summarise(afford_price_vol = round(sum(affordability_price_volatility)/n()*100,1)) %>% 
@@ -182,13 +182,10 @@ stock_items <- data %>%
 mfs_resil_restock <- data %>%  select(adm1,adm2,adm3)
 
 #for loop for calculating restock days
-
 for (item in stock_items) {
     #select the stock ('_stock_current) and restock duration ('_duration') columns for each item
-    item_stock <- data %>% select(contains(paste0(item,'_')) & ends_with('_stock_days')) 
-    #& -contains('wholesale')) %>% select(1) #edit these parameters to ensure only 1 item is selected for each iteration
-    item_restock <- data %>% select(contains(paste0(item,'_')) & ends_with('_resupply_days'))
-    #& -contains('wholesale')) %>% select(1) #edit these parameters to ensure only 1 item is selected for each iteration
+    item_stock <- data %>% select(contains(paste0(item,'_')) & ends_with('_stock_current') & -contains('wholesale')) %>% select(1) #edit these parameters to ensure only 1 item is selected for each iteration
+    item_restock <- data %>% select(contains(paste0(item,'_')) & ends_with('_duration') & -contains('wholesale')) %>% select(1) #edit these parameters to ensure only 1 item is selected for each iteration
     item_resilience <- item_stock - item_restock #calculate resilience days
     item_resilience <- ifelse(item_resilience > 3,3,
                               ifelse(item_resilience > 0,2,
@@ -212,7 +209,6 @@ mfs_resil_restock <- mfs_resil_restock %>%
 #% of vendors selecting "Yes"
 
 mfs_resil_supply_diverse <- data %>% 
-    mutate(nfi_supplier_single = hygiene_supply_issues) %>% # create & rename new variable to ease analysis
     select(adm1, adm2, adm3, ends_with('_single')) %>% 
     mutate(across(ends_with('_single'), ~if_else(. == 'yes',1,0))) %>% 
     group_by(adm1,adm2,adm3) %>% 
@@ -266,11 +262,10 @@ mfs_infra_facilities <- data %>%
 #% of vendors selecting an option other than "Yes, within my own business facilities" or "Yes, elsewhere within the marketplace"
 
 mfs_infra_storage <- data %>%  
-    mutate(infrastructure_storage = locked_storage) %>% # rename the indicators to ease analysis
-    mutate(infrastructure_storage = if_else(infrastructure_storage == 'no_outside_marketplace' |
-                                                infrastructure_storage == 'no_at_home' |
+    mutate(infrastructure_storage = if_else(infrastructure_storage == 'no_store_facility_outside' |
+                                                infrastructure_storage == 'no_store_at_home' |
                                                 infrastructure_storage == 'other' |
-                                                infrastructure_storage == 'dwta', 1,0)) %>% 
+                                                infrastructure_storage == 'prefer_not_answer', 1,0)) %>%
     group_by(adm1, adm2, adm3) %>% 
     summarise(infra_storage = round(sum(infrastructure_storage)/n()*100,1)) %>% 
     mutate(infra_storage_score = case_when(infra_storage<10 ~ 3,
@@ -284,7 +279,7 @@ mfs_infra_storage <- data %>%
 mfs_infra_payment <- data %>%  
     mutate(infra_payment_true = if_else(rowSums(select(.,contains('payment_modalities.') 
                                                        & -contains('cash') 
-                                                       & -contains('dk'))) > 0,1,0)) %>% 
+                                                       & -contains('dont_know'))) > 0,1,0)) %>% 
     group_by(adm1, adm2, adm3) %>% 
     summarise(infra_payment = round(sum(infra_payment_true, na.rm = T)/n()*100,1)) %>% 
     mutate(infra_payment_score = case_when(infra_payment>75 ~ 3,
