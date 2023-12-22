@@ -186,8 +186,10 @@ mfs_resil_restock <- data %>%  select(adm1,adm2,adm3)
 #for loop for calculating restock days
 for (item in stock_items) {
     #select the stock ('_stock_current) and restock duration ('_duration') columns for each item
-    item_stock <- data %>% select(contains(paste0(item,'_')) & ends_with('_stock_current') & -contains('wholesale')) %>% select(1) #edit these parameters to ensure only 1 item is selected for each iteration
-    item_restock <- data %>% select(contains(paste0(item,'_')) & ends_with('_duration') & -contains('wholesale')) %>% select(1) #edit these parameters to ensure only 1 item is selected for each iteration
+    item_stock <- data %>% select(contains(paste0(item,'_')) & ends_with('_stock_days'))
+    #& -contains('wholesale')) %>% select(1) #edit these parameters to ensure only 1 item is selected for each iteration
+    item_restock <- data %>% select(contains(paste0(item,'_')) & ends_with('_resupply_days'))
+    #& -contains('wholesale')) %>% select(1) #edit these parameters to ensure only 1 item is selected for each iteration
     item_resilience <- item_stock - item_restock #calculate resilience days
     item_resilience <- ifelse(item_resilience > 3,3,
                               ifelse(item_resilience > 0,2,
