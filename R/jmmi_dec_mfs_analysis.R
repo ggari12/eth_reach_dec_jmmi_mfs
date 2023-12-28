@@ -138,7 +138,13 @@ afford_scale <- 12 # set the max score for the affordability price levels - the 
 
 #calculate scores
 mfs_afford_price <- data %>% 
-    select(adm1,adm2,adm3,contains('_price_per_unit'),-contains('wholesale')) %>% 
+    select(adm1,adm2,adm3,contains('_price_per_unit'),-contains('wholesale'),
+                                                      -contains('bleach_price_per_unit'),
+                                                      -contains('camel_meat_price_per_unit'),
+                                                      -contains('mutton_price_per_unit'),
+                                                      -contains('water_price_per_unit'),
+                                                      -contains('water_5km_price_per_unit'),
+                                                      -contains('water_10km_price_per_unit')) %>% 
     group_by(adm1, adm2, adm3) %>% 
     summarise(across(everything(), ~median(., na.rm = TRUE))) %>% 
     ungroup() %>% 
